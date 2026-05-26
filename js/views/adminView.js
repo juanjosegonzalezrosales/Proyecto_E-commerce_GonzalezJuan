@@ -1,8 +1,8 @@
 // js/views/adminView.js
-import { getCategories, saveCategory, deleteCategory, getProducts, saveProduct, deleteProduct, loginAdmin } from '../storage.js';
+import { getCategories, saveCategory, deleteCategory, getProducts, saveProduct, deleteProduct, loginAdmin, getOrders } from '../storage.js';
 
 // ==========================================
-// 1. MÓDULO DE INICIO DE SESIÓN
+// 1. MÓDULO DE INICIO DE SESIÓN (ACTUALIZADO)
 // ==========================================
 export function renderLogin(container) {
     container.innerHTML = `
@@ -24,14 +24,20 @@ export function renderLogin(container) {
                 <button type="submit" class="btn-premium login-btn">Ingresar</button>
             </form>
             
+            <button id="btn-back-to-store" style="background: transparent; border: none; color: var(--color-texto); margin-top: 20px; cursor: pointer; text-decoration: underline; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">
+                ← Volver a la Tienda
+            </button>
+            
             <div id="login-alert" class="alert"></div>
         </div>
     `;
 
     const form = document.getElementById('login-form');
+    const btnBackStore = document.getElementById('btn-back-to-store');
+
+    // Lógica para procesar el login
     form.addEventListener('submit', (e) => {
         e.preventDefault();
-        
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-password').value;
         const alertDiv = document.getElementById('login-alert');
@@ -51,6 +57,13 @@ export function renderLogin(container) {
             alertDiv.classList.add('alert-error');
         }
     });
+
+    // 🌟 ENLACE DE REGRESO: Carga dinámicamente storeView.js al pulsar el botón
+    btnBackStore.addEventListener('click', () => {
+        import('./storeView.js').then(module => {
+            module.renderStore(container);
+        });
+    });
 }
 
 // ==========================================
@@ -59,13 +72,11 @@ export function renderLogin(container) {
 export function renderDashboard(container) {
     container.innerHTML = `
         <div class="dashboard-layout">
-            
             <aside class="sidebar">
                 <div class="sidebar-brand">
                     <h2>BOUTIQUE</h2>
                     <p>Panel de Control</p>
                 </div>
-                
                 <ul class="sidebar-menu">
                     <li class="menu-item">
                         <button id="menu-categories" class="active">📦 Categorías</button>
@@ -77,7 +88,6 @@ export function renderDashboard(container) {
                         <button id="menu-orders">📜 Pedidos</button>
                     </li>
                 </ul>
-                
                 <div class="sidebar-footer">
                     <button id="btn-session-logout" class="btn-logout">Cerrar Sesión</button>
                 </div>
@@ -88,16 +98,13 @@ export function renderDashboard(container) {
                     <h1 id="dashboard-view-title" class="content-title">Categorías</h1>
                     <div id="content-actions"></div>
                 </div>
-                
                 <div id="dashboard-view-body">
                     <p>Cargando información del módulo...</p>
                 </div>
             </main>
-
         </div>
     `;
 
-    // Carga inicial por defecto (Categorías)
     renderCategoriesModule();
 
     const viewTitle = document.getElementById('dashboard-view-title');
@@ -105,11 +112,9 @@ export function renderDashboard(container) {
     const btnLogout = document.getElementById('btn-session-logout');
 
     menuButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
+        button.addEventListener('click', () => {
             menuButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
-
-            // Limpiamos el contenedor de acciones para evitar residuos visuales
             document.getElementById('content-actions').innerHTML = '';
 
             if (button.id === 'menu-categories') {
@@ -120,7 +125,7 @@ export function renderDashboard(container) {
                 renderProductsModule(); 
             } else if (button.id === 'menu-orders') {
                 viewTitle.textContent = 'Pedidos';
-                document.getElementById('dashboard-view-body').innerHTML = '<p style="font-style:italic; color:#888;">Módulo de pedidos en desarrollo...</p>';
+                renderOrdersModule();
             }
         });
     });
@@ -149,7 +154,7 @@ export function renderCategoriesModule() {
     if (categories.length === 0) {
         viewBody.innerHTML = `
             <p style="text-align: center; color: #888; margin-top: 40px; font-style: italic;">
-                No hay categorías registradas actualmente. Presiona el botón de arriba para crear una.
+                No hay categorías registradas actualmente.
             </p>
         `;
     } else {
@@ -169,9 +174,9 @@ export function renderCategoriesModule() {
             <table style="width: 100%; border-collapse: collapse; background: #FFF; border: 1px solid #E5E1DA;">
                 <thead>
                     <tr style="background-color: var(--color-texto); color: var(--color-fondo); text-align: left;">
-                        <th style="padding: 15px; text-transform:uppercase; font-size:12px; letter-spacing:1px;">Nombre</th>
-                        <th style="padding: 15px; text-transform:uppercase; font-size:12px; letter-spacing:1px;">Descripción</th>
-                        <th style="padding: 15px; text-align: right; text-transform:uppercase; font-size:12px; letter-spacing:1px;">Acciones</th>
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Nombre</th>
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Descripción</th>
+                        <th style="padding: 15px; text-align: right; text-transform:uppercase; font-size:12px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -194,11 +199,11 @@ export function renderCategoriesModule() {
             <form id="form-create-category" style="margin-top: 10px;">
                 <div class="form-group">
                     <label class="form-label" style="font-size:12px;">Nombre de la Categoría</label>
-                    <input type="text" id="cat-name" class="form-input" required placeholder="Ej: Camisas, Calzado...">
+                    <input type="text" id="cat-name" class="form-input" required placeholder="Ej: Camisas...">
                 </div>
                 <div class="form-group">
                     <label class="form-label" style="font-size:12px;">Descripción</label>
-                    <textarea id="cat-desc" class="form-input" rows="3" required placeholder="Breve descripción de la categoría..." style="resize:none; font-family:inherit;"></textarea>
+                    <textarea id="cat-desc" class="form-input" rows="3" required placeholder="Breve descripción..." style="resize:none; font-family:inherit;"></textarea>
                 </div>
                 <button type="submit" class="btn-premium" style="width: 100%; border-radius:6px; margin-top:10px;">Guardar Categoría</button>
             </form>
@@ -209,9 +214,7 @@ export function renderCategoriesModule() {
     const btnOpenModal = document.getElementById('btn-open-category-modal');
     const formCreateCat = document.getElementById('form-create-category');
 
-    btnOpenModal.addEventListener('click', () => {
-        webModal.setAttribute('open', 'true');
-    });
+    btnOpenModal.addEventListener('click', () => webModal.setAttribute('open', 'true'));
 
     formCreateCat.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -229,7 +232,7 @@ export function renderCategoriesModule() {
     deleteButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const id = btn.getAttribute('data-id');
-            if (confirm('¿Estás seguro de que deseas eliminar esta categoría?')) {
+            if (confirm('¿Estás seguro de eliminar esta categoría?')) {
                 const response = deleteCategory(id);
                 if (response.success) {
                     alert(response.message);
@@ -241,7 +244,7 @@ export function renderCategoriesModule() {
 }
 
 // ==========================================
-// 4. MÓDULO INTERNO DE GESTIÓN DE PRODUCTOS 
+// 4. MÓDULO INTERNO DE GESTIÓN DE PRODUCTOS
 // ==========================================
 export function renderProductsModule() {
     const viewBody = document.getElementById('dashboard-view-body');
@@ -259,13 +262,13 @@ export function renderProductsModule() {
     if (products.length === 0) {
         viewBody.innerHTML = `
             <p style="text-align: center; color: #888; margin-top: 40px; font-style: italic;">
-                No hay productos en el inventario. Presiona el botón de arriba para registrar uno.
+                No hay productos en el inventario.
             </p>
         `;
     } else {
         const tableRows = products.map(prod => `
             <tr style="border-bottom: 1px solid #E5E1DA;">
-                <td style="padding: 10px;"><img src="${prod.image}" alt="${prod.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #E5E1DA;"></td>
+                <td style="padding: 10px;"><img src="${prod.image}" alt="${prod.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"></td>
                 <td style="padding: 15px; font-weight: bold;">${prod.name}</td>
                 <td style="padding: 15px; color: var(--color-acento); font-weight: bold;">$${prod.price.toFixed(2)}</td>
                 <td style="padding: 15px;">${prod.stock} uds</td>
@@ -334,7 +337,7 @@ export function renderProductsModule() {
                 <div class="form-group">
                     <label class="form-label" style="font-size:12px;">URL de la Imagen del Producto</label>
                     <input type="url" id="prod-img" class="form-input" placeholder="Ej: https://enlace-de-la-imagen.com/foto.jpg">
-                    <small style="color: #666; font-size: 11px; display: block; margin-top: 4px;">Dejar vacío para usar la imagen por defecto.</small>
+                    <small style="color: #666; font-size: 11px; display: block; margin-top: 4px;">Dejar vacío para usar la por defecto.</small>
                 </div>
                 <div class="form-group">
                     <label class="form-label" style="font-size:12px;">Descripción</label>
@@ -351,39 +354,36 @@ export function renderProductsModule() {
 
     btnOpenModal.addEventListener('click', () => {
         if (categories.length === 0) {
-            alert('Atención: Debe registrar al menos una categoría en el sistema antes de poder agregar productos.');
+            alert('Atención: Debe registrar al menos una categoría antes de agregar productos.');
             return;
         }
         webModal.setAttribute('open', 'true');
     });
 
     formCreateProd.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const productData = {
-        name: document.getElementById('prod-name').value,
-        category: document.getElementById('prod-category').value,
-        price: document.getElementById('prod-price').value,
-        stock: document.getElementById('prod-stock').value,
-        // 🌟 MEJORA: Capturamos directamente el valor del input (la URL de internet)
-        image: document.getElementById('prod-img').value,
-        description: document.getElementById('prod-desc').value
-    };
+        e.preventDefault();
+        const productData = {
+            name: document.getElementById('prod-name').value,
+            category: document.getElementById('prod-category').value,
+            price: document.getElementById('prod-price').value,
+            stock: document.getElementById('prod-stock').value,
+            image: document.getElementById('prod-img').value,
+            description: document.getElementById('prod-desc').value
+        };
 
-    const response = saveProduct(productData);
-
-    if (response.success) {
-        webModal.setAttribute('open', 'false');
-        alert(response.message);
-        renderProductsModule(); 
-    }
-});
+        const response = saveProduct(productData);
+        if (response.success) {
+            webModal.setAttribute('open', 'false');
+            alert(response.message);
+            renderProductsModule(); 
+        }
+    });
 
     const deleteButtons = document.querySelectorAll('.btn-delete-prod');
     deleteButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const id = btn.getAttribute('data-id');
-            if (confirm('¿Desea eliminar este producto del inventario?')) {
+            if (confirm('¿Desea eliminar este producto?')) {
                 const response = deleteProduct(id);
                 if (response.success) {
                     alert(response.message);
@@ -392,4 +392,53 @@ export function renderProductsModule() {
             }
         });
     });
+}
+
+// ==========================================
+// 5. MÓDULO INTERNO DE GESTIÓN DE PEDIDOS
+// ==========================================
+export function renderOrdersModule() {
+    const viewBody = document.getElementById('dashboard-view-body');
+    const viewActions = document.getElementById('content-actions');
+
+    viewActions.innerHTML = `
+        <span style="color: #666; font-size: 13px; font-style: italic;">Historial de ventas en tiempo real</span>
+    `;
+
+    const orders = getOrders();
+
+    if (orders.length === 0) {
+        viewBody.innerHTML = `
+            <p style="text-align: center; color: #888; margin-top: 40px; font-style: italic;">
+                No se han registrado pedidos en el sistema todavía.
+            </p>
+        `;
+    } else {
+        const tableRows = orders.map(order => `
+            <tr style="border-bottom: 1px solid #E5E1DA;">
+                <td style="padding: 15px; font-weight: bold;">#${order.id.slice(-6)}</td>
+                <td style="padding: 15px; color: #666;">${order.date}</td>
+                <td style="padding: 15px;">${order.customerName}</td>
+                <td style="padding: 15px; max-width: 250px; font-size: 13px;">${order.productsSummary}</td>
+                <td style="padding: 15px; color: var(--color-acento); font-weight: bold;">$${order.total.toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        viewBody.innerHTML = `
+            <table style="width: 100%; border-collapse: collapse; background: #FFF; border: 1px solid #E5E1DA;">
+                <thead>
+                    <tr style="background-color: var(--color-texto); color: var(--color-fondo); text-align: left;">
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">ID Pedido</th>
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Fecha</th>
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Cliente</th>
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Productos</th>
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Total Pagado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+        `;
+    }
 }
