@@ -160,3 +160,121 @@ body {
     border: 1px solid var(--color-error);
 }
 
+/* ==========================================================================
+   ESTILOS DEL DASHBOARD INTERNO (ADMINISTRADOR)
+   ========================================================================== */
+
+/* Contenedor principal que divide la pantalla en 2 usando Flexbox o Grid */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--color-fondo); /* Fondo Arena */
+}
+
+/* Barra lateral izquierda (Menú de navegación) */
+.sidebar {
+    width: 260px;
+    background-color: var(--color-texto); /* Café Muy Oscuro */
+    color: var(--color-fondo);
+    display: flex;
+    flex-direction: column;
+    padding: 30px 0;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+}
+
+.sidebar-brand {
+    text-align: center;
+    padding: 0 20px 30px 20px;
+    border-bottom: 1px solid rgba(253, 251, 247, 0.1);
+}
+
+.sidebar-brand h2 {
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--color-acento); /* Dorado Quemado */
+    font-weight: 300;
+}
+
+.sidebar-brand p {
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-top: 5px;
+}
+
+/* Lista de botones del menú */
+.sidebar-menu {
+    list-style: none;
+    margin-top: 30px;
+    flex-grow: 1; /* Hace que el menú ocupe el espacio disponible */
+}
+
+.menu-item button {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--color-fondo);
+    padding: 15px 25px;
+    text-align: left;
+    font-family: inherit;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.menu-item button:hover, 
+.menu-item button.active {
+    background-color: rgba(253, 251, 247, 0.05);
+    color: var(--color-acento); /* Se ilumina en dorado */
+    padding-left: 35px; /* Efecto de desplazamiento elegante */
+}
+
+/* Botón de cerrar sesión al final del sidebar */
+.sidebar-footer {
+    padding: 0 20px;
+}
+
+.btn-logout {
+    width: 100%;
+    background-color: transparent;
+    border: 1px solid var(--color-error);
+    color: var(--color-error);
+    padding: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+    background-color: var(--color-error);
+    color: var(--color-blanco);
+}
+
+/* Área de contenido de la derecha (Donde saldrán las tablas) */
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #E5E1DA;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.content-title {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
