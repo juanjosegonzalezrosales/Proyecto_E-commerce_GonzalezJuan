@@ -97,6 +97,7 @@ body {
 .form-group {
     margin-bottom: 25px; /* Más espacio entre campos */
     text-align: left;
+    overflow-y: ;
 }
 
 .form-label {

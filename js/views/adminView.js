@@ -1,9 +1,10 @@
 // js/views/adminView.js
-// Importamos de forma explícita usando la extensión .js y saliendo con '../'
-import { loginAdmin } from '../storage.js';
+import { getCategories, saveCategory, deleteCategory, getProducts, saveProduct, deleteProduct, loginAdmin } from '../storage.js';
 
-export function renderLogin(container) 
-{
+// ==========================================
+// 1. MÓDULO DE INICIO DE SESIÓN
+// ==========================================
+export function renderLogin(container) {
     container.innerHTML = `
         <div class="login-card">
             <h2 class="login-title">INICIAR SESIÓN</h2>
@@ -35,7 +36,6 @@ export function renderLogin(container)
         const pass = document.getElementById('login-password').value;
         const alertDiv = document.getElementById('login-alert');
 
-        // Ejecutamos la lógica de validación
         const resultado = loginAdmin(email, pass);
 
         alertDiv.classList.add('alert-visible');
@@ -45,23 +45,18 @@ export function renderLogin(container)
         if (resultado.success) {
             alertDiv.classList.add('alert-success');
             setTimeout(() => {
-                // MODIFICACIÓN: En vez de un alert vacío, llamamos al Dashboard directamente
                 renderDashboard(container);
-            }, 1000); // Bajamos a 1 segundo para mejorar la UX
+            }, 1000);
         } else {
             alertDiv.classList.add('alert-error');
         }
     });
 }
 
-// Al final de js/views/adminView.js
-
-// UBICACIÓN: Dentro de js/views/adminView.js
-
+// ==========================================
+// 2. ENTORNO PRINCIPAL (DASHBOARD LAYOUT)
+// ==========================================
 export function renderDashboard(container) {
-    // ==========================================
-    // PUNTO 1: INYECTAR LA ESTRUCTURA BASE
-    // ==========================================
     container.innerHTML = `
         <div class="dashboard-layout">
             
@@ -91,8 +86,7 @@ export function renderDashboard(container) {
             <main class="main-content">
                 <div class="content-header">
                     <h1 id="dashboard-view-title" class="content-title">Categorías</h1>
-                    <div id="content-actions">
-                        </div>
+                    <div id="content-actions"></div>
                 </div>
                 
                 <div id="dashboard-view-body">
@@ -103,81 +97,55 @@ export function renderDashboard(container) {
         </div>
     `;
 
-    // 🌟 LÍNEA NUEVA DEL PASO 4 (A): 
-    // Apenas se dibuja el Dashboard por primera vez, mandamos a pintar el listado de categorías por defecto.
+    // Carga inicial por defecto (Categorías)
     renderCategoriesModule();
 
-
-    // ==========================================
-    // PUNTO 2: CAPTURAR ELEMENTOS INTERNOS
-    // ==========================================
     const viewTitle = document.getElementById('dashboard-view-title');
     const menuButtons = document.querySelectorAll('.sidebar-menu button');
     const btnLogout = document.getElementById('btn-session-logout');
 
-
-    // ==========================================
-    // PUNTO 3: LÓGICA DE LOS CLICKS EN EL MENÚ
-    // ==========================================
     menuButtons.forEach(button => {
         button.addEventListener('click', (e) => {
-            // Quitamos la clase active de todos los botones
             menuButtons.forEach(btn => btn.classList.remove('active'));
-            // Se la ponemos solo al botón seleccionado
             button.classList.add('active');
 
-            // Evaluamos a qué botón se le dio clic:
+            // Limpiamos el contenedor de acciones para evitar residuos visuales
+            document.getElementById('content-actions').innerHTML = '';
+
             if (button.id === 'menu-categories') {
                 viewTitle.textContent = 'Categorías';
-                
-                // 🌟 LÍNEA NUEVA DEL PASO 4 (B):
-                // Si hace clic en el botón de Categorías, volvemos a renderizar el módulo para actualizar la tabla.
                 renderCategoriesModule();
-
             } else if (button.id === 'menu-products') {
                 viewTitle.textContent = 'Productos';
-                // (Próximamente limpiaremos el contenedor y cargaremos los productos)
-                document.getElementById('content-actions').innerHTML = '';
-                document.getElementById('dashboard-view-body').innerHTML = '<p>Módulo de productos en construcción...</p>';
-
+                renderProductsModule(); 
             } else if (button.id === 'menu-orders') {
                 viewTitle.textContent = 'Pedidos';
-                // (Próximamente limpiaremos el contenedor y cargaremos los pedidos)
-                document.getElementById('content-actions').innerHTML = '';
-                document.getElementById('dashboard-view-body').innerHTML = '<p>Módulo de pedidos en construcción...</p>';
+                document.getElementById('dashboard-view-body').innerHTML = '<p style="font-style:italic; color:#888;">Módulo de pedidos en desarrollo...</p>';
             }
         });
     });
 
-
-    // ==========================================
-    // PUNTO 4: LÓGICA DEL BOTÓN CERRAR SESIÓN
-    // ==========================================
     btnLogout.addEventListener('click', () => {
         localStorage.removeItem('admin_session'); 
         location.reload(); 
     });
 }
 
-// Al final de js/views/adminView.js
-import { getCategories, saveCategory, deleteCategory } from '../storage.js';
-
-// Función para renderizar el listado y formulario de categorías
+// ==========================================
+// 3. MÓDULO INTERNO DE GESTIÓN DE CATEGORÍAS
+// ==========================================
 export function renderCategoriesModule() {
     const viewBody = document.getElementById('dashboard-view-body');
     const viewActions = document.getElementById('content-actions');
 
-    // 1. Definimos el botón de acción en la cabecera
     viewActions.innerHTML = `
         <button id="btn-open-category-modal" class="btn-premium" style="padding: 8px 16px; font-size:12px;">
             + Agregar Categoría
         </button>
     `;
 
-    // 2. Traemos las categorías actuales desde nuestro cerebro de datos (storage)
     const categories = getCategories();
 
-    // 3. Diseñamos la tabla o el mensaje de vacío
     if (categories.length === 0) {
         viewBody.innerHTML = `
             <p style="text-align: center; color: #888; margin-top: 40px; font-style: italic;">
@@ -185,7 +153,6 @@ export function renderCategoriesModule() {
             </p>
         `;
     } else {
-        // Generamos las filas de la tabla dinámicamente con un .map()
         const tableRows = categories.map(cat => `
             <tr style="border-bottom: 1px solid #E5E1DA;">
                 <td style="padding: 15px; font-weight: bold;">${cat.name}</td>
@@ -214,11 +181,8 @@ export function renderCategoriesModule() {
         `;
     }
 
-    // 4. Inyectamos nuestro WEB COMPONENT de modal al final del cuerpo de la vista
-    // Nota cómo metemos el formulario DENTRO de las etiquetas de nuestro custom component
     const modalId = 'modal-new-category';
     let modalElement = document.getElementById(modalId);
-    
     if (!modalElement) {
         modalElement = document.createElement('div');
         modalElement.id = modalId;
@@ -241,36 +205,26 @@ export function renderCategoriesModule() {
         </custom-modal>
     `;
 
-    // 5. ESCUCHA DE EVENTOS DEL MÓDULO
     const webModal = document.getElementById('cat-web-modal');
     const btnOpenModal = document.getElementById('btn-open-category-modal');
     const formCreateCat = document.getElementById('form-create-category');
 
-    // Evento para Abrir el modal usando la API de nuestro Web Component
     btnOpenModal.addEventListener('click', () => {
         webModal.setAttribute('open', 'true');
     });
 
-    // Evento para procesar el envío del formulario
     formCreateCat.addEventListener('submit', (e) => {
         e.preventDefault();
         const name = document.getElementById('cat-name').value;
         const desc = document.getElementById('cat-desc').value;
-
-        // Guardamos en storage
         const response = saveCategory(name, desc);
-
         if (response.success) {
-            // Cerramos el modal cambiando el atributo del componente
             webModal.setAttribute('open', 'false');
-            // Emitimos mensaje de confirmación (Exigido en consideraciones adicionales)
             alert(response.message); 
-            // Recargamos el módulo para ver la nueva categoría reflejada en la tabla de inmediato
             renderCategoriesModule();
         }
     });
 
-    // Evento para Eliminar categoría utilizando delegación de eventos
     const deleteButtons = document.querySelectorAll('.btn-delete-cat');
     deleteButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -279,7 +233,161 @@ export function renderCategoriesModule() {
                 const response = deleteCategory(id);
                 if (response.success) {
                     alert(response.message);
-                    renderCategoriesModule(); // Refrescamos la lista
+                    renderCategoriesModule();
+                }
+            }
+        });
+    });
+}
+
+// ==========================================
+// 4. MÓDULO INTERNO DE GESTIÓN DE PRODUCTOS 
+// ==========================================
+export function renderProductsModule() {
+    const viewBody = document.getElementById('dashboard-view-body');
+    const viewActions = document.getElementById('content-actions');
+
+    viewActions.innerHTML = `
+        <button id="btn-open-product-modal" class="btn-premium" style="padding: 8px 16px; font-size:12px;">
+            + Agregar Producto
+        </button>
+    `;
+
+    const products = getProducts();
+    const categories = getCategories();
+
+    if (products.length === 0) {
+        viewBody.innerHTML = `
+            <p style="text-align: center; color: #888; margin-top: 40px; font-style: italic;">
+                No hay productos en el inventario. Presiona el botón de arriba para registrar uno.
+            </p>
+        `;
+    } else {
+        const tableRows = products.map(prod => `
+            <tr style="border-bottom: 1px solid #E5E1DA;">
+                <td style="padding: 10px;"><img src="${prod.image}" alt="${prod.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #E5E1DA;"></td>
+                <td style="padding: 15px; font-weight: bold;">${prod.name}</td>
+                <td style="padding: 15px; color: var(--color-acento); font-weight: bold;">$${prod.price.toFixed(2)}</td>
+                <td style="padding: 15px;">${prod.stock} uds</td>
+                <td style="padding: 15px;"><span style="background: #E5E1DA; padding: 4px 8px; border-radius: 12px; font-size: 11px; text-transform: uppercase;">${prod.category}</span></td>
+                <td style="padding: 15px; text-align: right;">
+                    <button class="btn-delete-prod" data-id="${prod.id}" style="background:none; border:none; color:var(--color-error); cursor:pointer; font-weight:bold; text-transform:uppercase; font-size:12px;">
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        viewBody.innerHTML = `
+            <table style="width: 100%; border-collapse: collapse; background: #FFF; border: 1px solid #E5E1DA;">
+                <thead>
+                    <tr style="background-color: var(--color-texto); color: var(--color-fondo); text-align: left;">
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Foto</th>
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Producto</th>
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Precio</th>
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Stock</th>
+                        <th style="padding: 15px; text-transform:uppercase; font-size:12px;">Categoría</th>
+                        <th style="padding: 15px; text-align: right; text-transform:uppercase; font-size:12px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+        `;
+    }
+
+    const categoryOptions = categories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('');
+
+    const modalId = 'modal-new-product';
+    let modalElement = document.getElementById(modalId);
+    if (!modalElement) {
+        modalElement = document.createElement('div');
+        modalElement.id = modalId;
+        viewBody.appendChild(modalElement);
+    }
+
+    modalElement.innerHTML = `
+        <custom-modal id="prod-web-modal" title="Nuevo Producto" open="false">
+            <form id="form-create-product" style="margin-top: 10px;">
+                <div class="form-group">
+                    <label class="form-label" style="font-size:12px;">Nombre del Producto</label>
+                    <input type="text" id="prod-name" class="form-input" required placeholder="Ej: Camisa Lino Slim">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="font-size:12px;">Categoría</label>
+                    <select id="prod-category" class="form-input" required style="font-family:inherit;">
+                        <option value="" disabled selected>Seleccione una categoría...</option>
+                        ${categoryOptions}
+                    </select>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label" style="font-size:12px;">Precio ($)</label>
+                        <input type="number" id="prod-price" class="form-input" step="0.01" min="0.1" required placeholder="29.99">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label class="form-label" style="font-size:12px;">Cantidad (Stock)</label>
+                        <input type="number" id="prod-stock" class="form-input" min="1" required placeholder="10">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="font-size:12px;">URL de la Imagen del Producto</label>
+                    <input type="url" id="prod-img" class="form-input" placeholder="Ej: https://enlace-de-la-imagen.com/foto.jpg">
+                    <small style="color: #666; font-size: 11px; display: block; margin-top: 4px;">Dejar vacío para usar la imagen por defecto.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" style="font-size:12px;">Descripción</label>
+                    <textarea id="prod-desc" class="form-input" rows="2" required placeholder="Detalles de la prenda..." style="resize:none; font-family:inherit;"></textarea>
+                </div>
+                <button type="submit" class="btn-premium" style="width: 100%; border-radius:6px; margin-top:5px;">Guardar Producto</button>
+            </form>
+        </custom-modal>
+    `;
+
+    const webModal = document.getElementById('prod-web-modal');
+    const btnOpenModal = document.getElementById('btn-open-product-modal');
+    const formCreateProd = document.getElementById('form-create-product');
+
+    btnOpenModal.addEventListener('click', () => {
+        if (categories.length === 0) {
+            alert('Atención: Debe registrar al menos una categoría en el sistema antes de poder agregar productos.');
+            return;
+        }
+        webModal.setAttribute('open', 'true');
+    });
+
+    formCreateProd.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const productData = {
+        name: document.getElementById('prod-name').value,
+        category: document.getElementById('prod-category').value,
+        price: document.getElementById('prod-price').value,
+        stock: document.getElementById('prod-stock').value,
+        // 🌟 MEJORA: Capturamos directamente el valor del input (la URL de internet)
+        image: document.getElementById('prod-img').value,
+        description: document.getElementById('prod-desc').value
+    };
+
+    const response = saveProduct(productData);
+
+    if (response.success) {
+        webModal.setAttribute('open', 'false');
+        alert(response.message);
+        renderProductsModule(); 
+    }
+});
+
+    const deleteButtons = document.querySelectorAll('.btn-delete-prod');
+    deleteButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            if (confirm('¿Desea eliminar este producto del inventario?')) {
+                const response = deleteProduct(id);
+                if (response.success) {
+                    alert(response.message);
+                    renderProductsModule();
                 }
             }
         });

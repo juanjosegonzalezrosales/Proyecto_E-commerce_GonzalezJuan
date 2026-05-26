@@ -39,6 +39,38 @@ export function deleteCategory(id) {
     return { success: true, message: 'Categoría eliminada correctamente.' };
 }
 
+// --- GESTIÓN DE PRODUCTOS ---
+export function getProducts() {
+    return getFromStorage(KEYS.PRODUCTS);
+}
+
+// --- GESTIÓN DE PRODUCTOS (Actualizado para URLs de imagen) ---
+export function saveProduct(productData) {
+    const products = getProducts();
+    
+    const newProduct = {
+        id: Date.now().toString(),
+        name: productData.name,
+        description: productData.description,
+        price: parseFloat(productData.price),
+        stock: parseInt(productData.stock),
+        category: productData.category,
+        // 🌟 MEJORA: Si el usuario ingresó algo, guardamos esa URL directa. Si no, usa la de defecto.
+        image: productData.image ? productData.image.trim() : 'img/login.jpg'
+    };
+
+    products.push(newProduct);
+    saveToStorage(KEYS.PRODUCTS, products);
+    return { success: true, message: '¡Producto guardado exitosamente!' };
+}
+
+export function deleteProduct(id) {
+    let products = getProducts();
+    products = products.filter(prod => prod.id !== id);
+    saveToStorage(KEYS.PRODUCTS, products);
+    return { success: true, message: 'Producto eliminado correctamente.' };
+}
+
 // --- AUTENTICACIÓN (LOGIN) ---
 export function loginAdmin(email, password) {
     const ADMIN_EMAIL = 'admin@mail.com';

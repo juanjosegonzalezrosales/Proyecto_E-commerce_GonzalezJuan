@@ -33,19 +33,20 @@ class CustomModal extends HTMLElement {
         }
     }
 
+    // js/components/CustomModal.js (Reemplazar la función render)
+
     render() {
         const title = this.getAttribute('title') || 'Ventana';
         
         this.shadowRoot.innerHTML = `
             <style>
-                /* Estilos encapsulados del Modal en la burbuja del Shadow DOM */
                 .modal-overlay {
                     position: fixed;
                     top: 0;
                     left: 0;
                     width: 100vw;
                     height: 100vh;
-                    background-color: rgba(43, 38, 37, 0.5); /* Sombra café translúcida */
+                    background-color: rgba(43, 38, 37, 0.5);
                     display: flex;
                     justify-content: center;
                     align-items: center;
@@ -69,7 +70,12 @@ class CustomModal extends HTMLElement {
                     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
                     transform: translateY(-20px);
                     transition: transform 0.3s ease;
-                    border: 1px solid rgba(212, 175, 55, 0.3); /* Borde dorado tenue */
+                    border: 1px solid rgba(212, 175, 55, 0.3);
+                    
+                    /* 🌟 SOLUCIÓN AL CORTE DE PANTALLA: Control de alto máximo */
+                    max-height: 85vh; /* El modal nunca ocupará más del 85% de la altura de la pantalla */
+                    display: flex;
+                    flex-direction: column; /* Alinea header y contenido verticalmente */
                 }
                 
                 .modal-overlay.active .modal-container {
@@ -83,6 +89,7 @@ class CustomModal extends HTMLElement {
                     border-bottom: 1px solid #E5E1DA;
                     padding-bottom: 15px;
                     margin-bottom: 20px;
+                    flex-shrink: 0; /* Evita que el título se aplaste con el scroll */
                 }
                 
                 .modal-title {
@@ -105,6 +112,24 @@ class CustomModal extends HTMLElement {
                 .btn-close:hover {
                     color: #D32F2F;
                 }
+
+                /* 🌟 EL CONTENEDOR MÁGICO CON SCROLL INTERNO */
+                .modal-content {
+                    overflow-y: auto; /* Activa el scroll vertical dinámico si el contenido se desborda */
+                    padding-right: 5px; /* Pequeño espacio para que la barra de scroll no tape el texto */
+                }
+
+                /* Estilo premium personalizado para la barra de scroll dentro del modal */
+                .modal-content::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .modal-content::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                }
+                .modal-content::-webkit-scrollbar-thumb {
+                    background: var(--color-acento, #D4AF37);
+                    border-radius: 10px;
+                }
             </style>
             
             <div class="modal-overlay">
@@ -120,7 +145,6 @@ class CustomModal extends HTMLElement {
             </div>
         `;
     }
-
     setupEvents() {
         // Al hacer clic en la equis (&times;), cerramos el modal
         const closeBtn = this.shadowRoot.querySelector('.btn-close');
