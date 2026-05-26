@@ -1,0 +1,162 @@
+/* ==========================================================================
+   VARIABLES GLOBALES Y CONFIGURACIÓN BASE (Paleta Elegante con Vidrio)
+   ========================================================================== */
+:root {
+    --color-fondo: #FDFBF7;       /* Arena muy claro (60%) */
+    --color-texto: #2B2625;       /* Café muy oscuro (30%) */
+    --color-acento: #D4AF37;      /* Dorado Quemado (10% - Botones y acciones) */
+    --color-blanco: #FFFFFF;
+    
+    /* Nueva variable para la tarjeta de vidrio (Dorado con transparencia) */
+    --color-glass: rgba(253, 251, 247, 0.65); /* Arena semi-transparente */
+    --color-glass-border: rgba(212, 175, 55, 0.2); /* Dorado muy tenue para el borde */
+
+    --color-error: #D32F2F;       /* Rojo sutil para alertas de error */
+    --color-exito: #388E3C;       /* Verde sutil para alertas de éxito */
+    --fuente-principal: 'Playfair Display', 'Segoe UI', serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    /* MODIFICACIÓN: Aquí agregamos la imagen de fondo para todo el cuerpo */
+    background-color: var(--color-fondo);
+    background-image: url('../img/login.jpg'); /* Ruta relativa: sale de css/ entra a img/ */
+    opacity: 80%;
+    background-size: cover;        /* Hace que la imagen ocupe todo el ancho y alto sin estirarse */
+    background-position: center;   /* Centra la imagen */
+    background-repeat: no-repeat;  /* No repite la imagen si la pantalla es muy grande */
+    background-attachment: fixed;  /* La imagen se queda quieta al hacer scroll */
+    
+    color: var(--color-texto);
+    font-family: var(--fuente-principal);
+    line-height: 1.6;
+    overflow-x: hidden;
+    height: 100vh; /* Asegura que el body ocupe todo el alto de la pantalla */
+}
+
+/* Botón Premium Reutilizable */
+.btn-premium {
+    background-color: var(--color-texto);
+    color: var(--color-fondo);
+    border: 1px solid var(--color-texto);
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-premium:hover {
+    background-color: var(--color-acento);
+    color: var(--color-texto);
+    border-color: var(--color-acento);
+}
+
+/* ==========================================================================
+   VISTA DE LOGIN (ESTILOS CON EFECTO VIDRIO)
+   ========================================================================== */
+.login-card {
+    max-width: 420px; /* Un poco más ancha para respirar mejor */
+    margin: 100px auto;
+    padding: 40px; /* Más padding para elegancia */
+    text-align: center;
+
+    /* MODIFICACIÓN: Aquí está el truco del efecto vidrio */
+    background-color: var(--color-glass); /* Fondo semi-transparente */
+    border: 1px solid var(--color-glass-border); /* Borde tenue para definición */
+    border-radius: 12px; /* Esquinas redondeadas suaves */
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15); /* Sombra elegante */
+    
+    /* El superpoder moderno para el efecto de difuminado esmerilado */
+    backdrop-filter: blur(10px); /* Difumina el fondo detrás de la tarjeta */
+    -webkit-backdrop-filter: blur(10px); /* Compatibilidad con Safari */
+}
+
+.login-title {
+    color: var(--color-texto);
+    margin-bottom: 10px;
+    font-weight: 300;
+    letter-spacing: 3px; /* Más espaciado para un look premium */
+    text-transform: uppercase;
+}
+
+.login-subtitle {
+    font-size: 13px;
+    color: var(--color-texto); /* Texto más oscuro para legibilidad sobre el vidrio */
+    margin-bottom: 30px;
+    letter-spacing: 1.5px;
+    font-weight: bold;
+}
+
+.form-group {
+    margin-bottom: 25px; /* Más espacio entre campos */
+    text-align: left;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-texto);
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px; /* Campos un poco más altos */
+    border: 1px solid rgba(43, 38, 37, 0.3); /* Borde café oscuro muy tenue */
+    font-family: inherit;
+    /* Fondo del input también con ligera transparencia */
+    background-color: rgba(255, 255, 255, 0.3); 
+    color: var(--color-texto);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--color-acento);
+    background-color: rgba(255, 255, 255, 0.6); /* Se ilumina ligeramente al focus */
+    box-shadow: 0 0 5px rgba(212, 175, 55, 0.3); /* Brillo dorado suave */
+}
+
+.login-btn {
+    width: 100%;
+    margin-top: 15px;
+    border-radius: 6px;
+}
+
+/* Mensajes de feedback al usuario - Adaptados para legibilidad sobre el vidrio */
+.alert {
+    margin-top: 25px;
+    padding: 15px;
+    font-size: 14px;
+    display: none;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.alert-visible {
+    display: block;
+}
+
+.alert-success {
+    background-color: rgba(56, 142, 60, 0.2); /* Transparencia verde */
+    color: var(--color-exito);
+    border: 1px solid var(--color-exito);
+}
+
+.alert-error {
+    background-color: rgba(211, 47, 47, 0.2); /* Transparencia roja */
+    color: var(--color-error);
+    border: 1px solid var(--color-error);
+}
+
