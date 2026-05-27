@@ -1,186 +1,305 @@
 // js/storage.js
 
-const KEYS = {
-    CATEGORIES: 'ecommerce_categories',
-    PRODUCTS: 'ecommerce_products',
-    ORDERS: 'ecommerce_orders'
-};
+// 1. Base de datos inicial (Productos con rutas reales)
+const INITIAL_PRODUCTS = [
+    {
+        id: "prod_1",
+        name: "Bokken de Aikido",
+        category: "aikido",
+        price: 850000,
+        stock: 12,
+        image: "img/bokkenAikido.jpg",
+        description: "Bokken de madera de roble blanco seleccionado, ideal para la práctica intensiva de Aikido y Kata."
+    },
+    {
+        id: "prod_2",
+        name: "Gi tradicional",
+        category: "karate",
+        price: 200000,
+        stock: 8,
+        image: "img/kumiteKarate.jpg",
+        description: "Uniforme tradicional de algodón de alta resistencia, corte cómodo ideal para principiantes y avanzados."
+    },
+    {
+        id: "prod_3",
+        name: "casco para Muai Thai",
+        category: "muay thai",
+        price: 150000,
+        stock: 5,
+        image: "img/cascoMuaiThai.jpg",
+        description: "casco especial para campeonatos"
+    },
+    {
+        id: "prod_4",
+        name: "cinturon",
+        category: "karate",
+        price: 100000,
+        stock: 15,
+        image: "img/cinturon.jpg",
+        description: "cinturon negro de karate."
+    },
+    {
+        id: "prod_5",
+        name: "hakama",
+        category: "aikido",
+        price: 200000,
+        stock: 15,
+        image: "img/hakamaAikido.jpg",
+        description: "pantalon tradicional para practicar aikido."
+    },
+    {
+        id: "prod_6",
+        name: "peto",
+        category: "muay thai",
+        price: 100000,
+        stock: 15,
+        image: "img/petoMuaTay.jpg",
+        description: "peto especial para competencias"
+    },
+    {
+        id: "prod_7",
+        name: "protector de puños",
+        category: "muay thai",
+        price: 100000,
+        stock: 15,
+        image: "img/protector de puños.png",
+        description: "protector de puños especial para competencias"
+    },
+    {
+        id: "prod_8",
+        name: "protector de canillas",
+        category: "muay thai",
+        price: 100000,
+        stock: 15,
+        image: "img/protectorCanillapieMuaThai.jpg",
+        description: "protector de canillas y pies especial para competencias"
+    },
+    {
+        id: "prod_9",
+        name: "protector de canillas",
+        category: "karate",
+        price: 100000,
+        stock: 15,
+        image: "img/Tokaido Espinillera .jpg",
+        description: "protector de canillas especial para competencias"
+    }
 
-function getFromStorage(key) {
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : [];
+];
+
+const INITIAL_CATEGORIES = [
+    { id: "cat_1", name: "karate", description: "Implementos de madera tradicionales para la práctica" },
+    { id: "cat_2", name: "aikido", description: "Vestimenta e indumentaria tradicional de Keiko" },
+    { id: "cat_3", name: "muay thai", description: "Vestimenta e indumentaria tradicional de Keiko" }
+];
+
+// Inicializar LocalStorage si está vacío
+if (!localStorage.getItem('products')) {
+    localStorage.setItem('products', JSON.stringify(INITIAL_PRODUCTS));
+}
+if (!localStorage.getItem('categories')) {
+    localStorage.setItem('categories', JSON.stringify(INITIAL_CATEGORIES));
+}
+if (!localStorage.getItem('cart')) {
+    localStorage.setItem('cart', JSON.stringify([]));
+}
+if (!localStorage.getItem('orders')) {
+    localStorage.setItem('orders', JSON.stringify([]));
 }
 
-function saveToStorage(key, data) {
-    localStorage.setItem(key, JSON.stringify(data));
-}
-
-// --- GESTIÓN DE CATEGORÍAS ---
-export function getCategories() {
-    return getFromStorage(KEYS.CATEGORIES);
-}
-
-export function saveCategory(categoryName, categoryDescription) {
-    const categories = getCategories();
-    const newCategory = {
-        id: Date.now().toString(),
-        name: categoryName,
-        description: categoryDescription
-    };
-    categories.push(newCategory);
-    saveToStorage(KEYS.CATEGORIES, categories);
-    return { success: true, message: '¡Categoría agregada con éxito!' };
-}
-
-export function deleteCategory(id) {
-    let categories = getCategories();
-    categories = categories.filter(cat => cat.id !== id);
-    saveToStorage(KEYS.CATEGORIES, categories);
-    return { success: true, message: 'Categoría eliminada correctamente.' };
-}
-
-// --- GESTIÓN DE PRODUCTOS ---
+// 2. Funciones de Productos
 export function getProducts() {
-    return getFromStorage(KEYS.PRODUCTS);
+    return JSON.stringify(localStorage.getItem('products')) ? JSON.parse(localStorage.getItem('products')) : [];
 }
 
-// --- GESTIÓN DE PRODUCTOS (Actualizado para URLs de imagen) ---
 export function saveProduct(productData) {
     const products = getProducts();
-    
     const newProduct = {
-        id: Date.now().toString(),
+        id: 'prod_' + Date.now(),
         name: productData.name,
-        description: productData.description,
-        price: parseFloat(productData.price),
-        stock: parseInt(productData.stock),
         category: productData.category,
-        // 🌟 MEJORA: Si el usuario ingresó algo, guardamos esa URL directa. Si no, usa la de defecto.
-        image: productData.image ? productData.image.trim() : 'img/login.jpg'
+        price: parseFloat(productData.price) || 0,
+        stock: parseInt(productData.stock) || 0,
+        image: productData.image || 'img/logo.png',
+        description: productData.description
     };
-
     products.push(newProduct);
-    saveToStorage(KEYS.PRODUCTS, products);
-    return { success: true, message: '¡Producto guardado exitosamente!' };
+    localStorage.setItem('products', JSON.stringify(products));
+    return { success: true, message: 'Producto guardado exitosamente.' };
 }
 
 export function deleteProduct(id) {
     let products = getProducts();
-    products = products.filter(prod => prod.id !== id);
-    saveToStorage(KEYS.PRODUCTS, products);
-    return { success: true, message: 'Producto eliminado correctamente.' };
+    products = products.filter(p => p.id !== id);
+    localStorage.setItem('products', JSON.stringify(products));
+    return { success: true, message: 'Producto eliminado del sistema.' };
 }
 
-export function getOrders() {
-    return getFromStorage(KEYS.ORDERS);
+// 3. Funciones de Categorías
+export function getCategories() {
+    return JSON.parse(localStorage.getItem('categories')) || [];
 }
 
-// --- AUTENTICACIÓN (LOGIN) ---
-export function loginAdmin(email, password) {
-    const ADMIN_EMAIL = 'admin@mail.com';
-    const ADMIN_PASS = '123456';
+export function saveCategory(name, description) {
+    const categories = getCategories();
+    const newCat = { id: 'cat_' + Date.now(), name, description };
+    categories.push(newCat);
+    localStorage.setItem('categories', JSON.stringify(categories));
+    return { success: true, message: 'Categoría añadida.' };
+}
 
-    if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
-        localStorage.setItem('admin_session', 'active');
-        return { success: true, message: '¡Bienvenido al Panel de Administración!' };
-    } else {
-        return { success: false, message: 'Credenciales incorrectas. Inténtalo de nuevo.' };
+export function deleteCategory(id) {
+    let categories = getCategories();
+    categories = categories.filter(c => c.id !== id);
+    localStorage.setItem('categories', JSON.stringify(categories));
+    return { success: true, message: 'Categoría eliminada.' };
+}
+
+// 4. Funciones del Carrito
+export function getCart() {
+    return JSON.parse(localStorage.getItem('cart')) || [];
+}
+
+export function getCartCount() {
+    const cart = getCart();
+    return cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+}
+
+export function addToCart(productId) {
+    const products = getProducts();
+    const cart = getCart();
+    const product = products.find(p => p.id === productId);
+
+    if (!product || product.stock <= 0) {
+        return { success: false, message: 'No hay stock disponible.' };
     }
+
+    const cartItem = cart.find(item => item.id === productId);
+    if (cartItem) {
+        if (cartItem.quantity >= product.stock) {
+            return { success: false, message: 'Has alcanzado el límite de stock disponible.' };
+        }
+        cartItem.quantity += 1;
+    } else {
+        cart.push({ ...product, quantity: 1 });
+    }
+
+    localStorage.setItem('cart', JSON.stringify(cart));
+    return { success: true, message: `"${product.name}" agregado a la bolsa.` };
+}
+
+export function updateCartQuantity(productId, newQty) {
+    let cart = getCart();
+    const products = getProducts();
+    const product = products.find(p => p.id === productId);
+
+    if (newQty <= 0) {
+        return removeFromCart(productId);
+    }
+
+    const cartItem = cart.find(item => item.id === productId);
+    if (cartItem && product) {
+        if (newQty > product.stock) {
+            return { success: false, message: `Solo quedan ${product.stock} unidades en almacén.` };
+        }
+        cartItem.quantity = newQty;
+    }
+
+    localStorage.setItem('cart', JSON.stringify(cart));
+    return { success: true };
+}
+
+export function removeFromCart(productId) {
+    let cart = getCart();
+    cart = cart.filter(item => item.id !== productId);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    return { success: true, message: 'Artículo removido.' };
+}
+
+export function checkoutCart(customerName) {
+    const cart = getCart();
+    let products = getProducts();
+
+    if (cart.length === 0) return { success: false, message: 'El carrito está vacío.' };
+
+    // Verificar e inflar decremento de stock
+    for (const item of cart) {
+        const prod = products.find(p => p.id === item.id);
+        if (!prod || prod.stock < item.quantity) {
+            return { success: false, message: `Stock insuficiente para el artículo: ${item.name}` };
+        }
+    }
+
+    // Decrementar
+    cart.forEach(item => {
+        const prod = products.find(p => p.id === item.id);
+        if (prod) prod.stock -= item.quantity;
+    });
+
+    // Registrar Pedido
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const summary = cart.map(item => `${item.name} (x${item.quantity})`).join(', ');
+
+    orders.push({
+        id: 'ord_' + Date.now(),
+        date: new Date().toLocaleDateString(),
+        customerName,
+        productsSummary: summary,
+        total
+    });
+
+    localStorage.setItem('products', JSON.stringify(products));
+    localStorage.setItem('orders', JSON.stringify(orders));
+    localStorage.setItem('cart', JSON.stringify([])); // Limpiar bolsa
+
+    return { success: true, message: `¡Gracias por tu compra, ${customerName}! Tu pedido ha sido procesado.` };
+}
+
+// 5. Autenticación Administrador
+export function loginAdmin(email, password) {
+    if (email === 'admin@mail.com' && password === '123456') {
+        localStorage.setItem('admin_session', 'active');
+        return { success: true, message: 'Acceso concedido. Bienvenido.' };
+    }
+    return { success: false, message: 'Credenciales inválidas.' };
 }
 
 export function isAdminLoggedIn() {
     return localStorage.getItem('admin_session') === 'active';
 }
 
-export function logoutAdmin() {
-    localStorage.removeItem('admin_session');
-}
+export function getOrders() {
+    return JSON.parse(localStorage.getItem('orders')) || [];
+} 
+// AGREGAR ESTAS DOS FUNCIONES EN TU js/storage.js
 
-// --- GESTIÓN DEL CARRITO DE COMPRAS ---
-
-// Claves de almacenamiento adicionales
-KEYS.CART = 'boutique_cart';
-
-// 1. Obtener los productos actuales del carrito
-export function getCart() {
-    return getFromStorage(KEYS.CART);
-}
-
-// 2. Agregar o actualizar un producto en el carrito controlando el stock
-export function addToCart(productId) {
-    const products = getFromStorage(KEYS.PRODUCTS);
-    const cart = getCart();
-    
-    // Buscamos el producto en el inventario real
-    const product = products.find(p => p.id === productId);
-    if (!product || product.stock <= 0) {
-        return { success: false, message: 'Lo sentimos, este producto no tiene stock disponible.' };
+export function updateCategory(id, name, description) {
+    let categories = getCategories();
+    const index = categories.findIndex(c => c.id === id);
+    if (index !== -1) {
+        categories[index].name = name;
+        categories[index].description = description;
+        localStorage.setItem('categories', JSON.stringify(categories));
+        return { success: true, message: "Categoría actualizada correctamente." };
     }
+    return { success: false, message: "Categoría no encontrada." };
+}
 
-    // Buscamos si ya existe dentro del carrito actual
-    const cartItem = cart.find(item => item.id === productId);
-
-    if (cartItem) {
-        // Si ya existe, validamos que no supere el stock total disponible
-        if (cartItem.quantity >= product.stock) {
-            return { success: false, message: `Límite alcanzado. Solo quedan ${product.stock} unidades disponibles.` };
-        }
-        cartItem.quantity += 1;
-    } else {
-        // Si es nuevo, lo registramos con cantidad inicial 1
-        cart.push({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.image,
-            category: product.category,
-            quantity: 1,
-            maxStock: product.stock // Guardamos el tope para validar en la interfaz del carrito
-        });
+export function updateProduct(id, updatedData) {
+    let products = getProducts();
+    const index = products.findIndex(p => p.id === id);
+    if (index !== -1) {
+        products[index] = {
+            ...products[index],
+            name: updatedData.name,
+            category: updatedData.category,
+            price: parseFloat(updatedData.price) || 0,
+            stock: parseInt(updatedData.stock) || 0,
+            image: updatedData.image,
+            description: updatedData.description
+        };
+        localStorage.setItem('products', JSON.stringify(products));
+        return { success: true, message: "Producto actualizado correctamente." };
     }
-
-    saveToStorage(KEYS.CART, cart);
-    return { success: true, message: '¡Prenda añadida al carrito con éxito!' };
-}
-
-// 3. Obtener el número total de prendas en el carrito (para el contador de la Navbar)
-export function getCartCount() {
-    const cart = getCart();
-    return cart.reduce((total, item) => total + item.quantity, 0);
-}
-
-// 4. Actualizar la cantidad de un artículo directamente en el carrito
-export function updateCartQuantity(productId, newQuantity) {
-    const cart = getCart();
-    const item = cart.find(i => i.id === productId);
-
-    if (item) {
-        // Validamos que no sobrepase el stock máximo real
-        if (newQuantity > item.maxStock) {
-            return { success: false, message: `Límite de inventario alcanzado (${item.maxStock} uds).` };
-        }
-        
-        item.quantity = newQuantity;
-        
-        // Si la cantidad llega a cero, lo removemos automáticamente
-        if (item.quantity <= 0) {
-            return removeFromCart(productId);
-        }
-    }
-
-    saveToStorage(KEYS.CART, cart);
-    return { success: true };
-}
-
-// 5. Eliminar por completo una prenda del carrito
-export function removeFromCart(productId) {
-    let cart = getCart();
-    cart = cart.filter(item => item.id !== productId);
-    saveToStorage(KEYS.CART, cart);
-    return { success: true, message: 'Artículo removido del carrito.' };
-}
-
-// 6. Vaciar todo el carrito (Útil para cuando se finalice la compra)
-export function clearCart() {
-    saveToStorage(KEYS.CART, []);
+    return { success: false, message: "Producto no encontrado." };
 }
