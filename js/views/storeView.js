@@ -15,24 +15,22 @@ export function renderStore(container) {
     container.innerHTML = `
         <style>
             .store-nav {
-                background-color: var(--color-texto); 
-                color: var(--color-fondo); 
-                padding: 15px 20px; 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: center; 
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-                position: sticky; 
-                top: 0; 
-                z-index: 100;
-                flex-wrap: wrap;
-                gap: 15px;
+                background-color: var(--color-texto); color: var(--color-fondo); padding: 15px 20px; 
+                display: flex; justify-content: space-between; align-items: center; 
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;
+                flex-wrap: wrap; gap: 15px;
             }
             .hero-title { font-size: 32px; }
             .products-grid {
-                display: grid; 
-                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
-                gap: 20px;
+                display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;
+            }
+            .search-bar-container {
+                max-width: 500px; margin: 20px auto 0 auto; width: 100%; box-sizing: border-box;
+            }
+            .search-input {
+                width: 100%; padding: 12px 20px; border: 1px solid #E5E1DA; border-radius: 30px;
+                font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); outline: none; box-sizing: border-box;
+                background-color: #FFF; color: #333;
             }
             @media (min-width: 768px) {
                 .store-nav { padding: 20px 40px; }
@@ -58,13 +56,18 @@ export function renderStore(container) {
                 </div>
             </nav>
 
-            <header class="store-hero-banner" style="background-color: #6B685B; color: var(--color-blanco); text-align: center; padding: 40px 15px;">
+            <header class="store-hero-banner" style="background-color: #6B685B; color: var(--color-blanco); text-align: center; padding: 40px 15px 45px 15px;">
                 <h2 class="hero-title" style="font-family: 'Playfair Display', serif; font-weight: 300; letter-spacing: 2px; margin-bottom: 10px; color: var(--color-acento);">Nuestro Catálogo</h2>
-                <p style="font-size: 14px; font-style: italic; opacity: 0.9; margin-bottom: 25px;">Explora el equipamiento e indumentaria tradicional de Keiko</p>
-                <div id="category-filters-container" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; max-width: 800px; margin: 0 auto;"></div>
+                <p style="font-size: 14px; font-style: italic; opacity: 0.9; margin-bottom: 20px;">Explora el equipamiento e indumentaria tradicional de Keiko</p>
+                
+                <div class="search-bar-container">
+                    <input type="text" id="store-search-input" class="search-input" placeholder="🔍 Buscar productos por nombre...">
+                </div>
+
+                <div id="category-filters-container" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; max-width: 800px; margin: 25px auto 0 auto;"></div>
             </header>
 
-            <main class="store-container" style="max-width: 1200px; margin: 0 auto; padding: 25px 15px;">
+            <main class="store-container" style="max-width: 1200px; margin: 30px auto; padding: 10px 15px 40px 15px;">
                 <div id="products-grid" class="products-grid"></div>
             </main>
         </div>
@@ -72,7 +75,6 @@ export function renderStore(container) {
 
     document.getElementById('nav-brand-logo').addEventListener('click', () => renderStore(container));
     document.getElementById('btn-nav-cart').addEventListener('click', () => renderCartPage(container));
-    
     document.getElementById('btn-go-to-login').addEventListener('click', () => {
         document.body.style.backgroundImage = "url('../img/login.jpg')"; 
         import('./adminView.js').then(module => module.renderLogin(container));
@@ -80,19 +82,33 @@ export function renderStore(container) {
 
     const filtersContainer = document.getElementById('category-filters-container');
     const productsGrid = document.getElementById('products-grid');
+    const searchInput = document.getElementById('store-search-input');
 
-    function displayProducts(productsList) {
-        if (productsList.length === 0) {
-            productsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#888; padding:40px; font-style:italic;">No hay productos en esta sección.</div>`;
+    let activeCategory = 'todos';
+
+    function displayProducts() {
+        let filtered = products;
+        if (activeCategory !== 'todos') {
+            filtered = products.filter(p => p.category.toLowerCase() === activeCategory.toLowerCase());
+        }
+
+        const keyword = searchInput.value.toLowerCase().trim();
+        if (keyword !== '') {
+            filtered = filtered.filter(p => p.name.toLowerCase().includes(keyword));
+        }
+
+        if (filtered.length === 0) {
+            productsGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#888; padding:40px; font-style:italic;">No se encontraron productos que coincidan.</div>`;
             return;
         }
 
-        productsGrid.innerHTML = productsList.map(prod => {
+        productsGrid.innerHTML = filtered.map(prod => {
             const stockNum = parseInt(prod.stock) || 0;
             return `
                 <div class="store-product-card" data-product-id="${prod.id}" style="cursor: pointer; background: #FFF; display: flex; flex-direction: column; height: 100%; border: 1px solid #E5E1DA; border-radius: 8px; overflow: hidden;">
                     <div style="height: 280px; overflow: hidden; position: relative;">
                         <img src="${prod.image}" alt="${prod.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:3px 8px; border-radius:3px;">Cód: ${prod.code || 'S/C'}</span>
                     </div>
                     <div style="padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
                         <div>
@@ -124,7 +140,7 @@ export function renderStore(container) {
         });
     }
 
-    displayProducts(products);
+    searchInput.addEventListener('input', displayProducts);
 
     const allButton = document.createElement('button');
     allButton.textContent = 'Ver Todos';
@@ -135,7 +151,10 @@ export function renderStore(container) {
     allButton.style.cursor = 'pointer';
     allButton.style.borderRadius = '20px';
     allButton.style.fontSize = '12px';
-    allButton.addEventListener('click', () => displayProducts(products));
+    allButton.addEventListener('click', () => {
+        activeCategory = 'todos';
+        displayProducts();
+    });
     filtersContainer.appendChild(allButton);
 
     categories.forEach(cat => {
@@ -149,11 +168,13 @@ export function renderStore(container) {
         catButton.style.borderRadius = '20px';
         catButton.style.fontSize = '12px';
         catButton.addEventListener('click', () => {
-            const filtered = products.filter(p => p.category.toLowerCase() === cat.name.toLowerCase());
-            displayProducts(filtered);
+            activeCategory = cat.name;
+            displayProducts();
         });
         filtersContainer.appendChild(catButton);
     });
+
+    displayProducts();
 }
 
 export function renderProductDetail(container, productId) {
@@ -170,15 +191,10 @@ export function renderProductDetail(container, productId) {
 
     container.innerHTML = `
         <style>
-            .detail-nav {
-                background-color: var(--color-texto); color: var(--color-fondo); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8 rgba(0,0,0,0.05); flex-wrap: wrap; gap: 10px;
-            }
-            .detail-flex-container {
-                display: flex; flex-direction: column; gap: 20px; background: #FFFFFF; border: 1px solid #E5E1DA; border-radius: 8px; padding: 20px;
-            }
+            .detail-nav { background-color: var(--color-texto); color: var(--color-fondo); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 10px; }
+            .detail-flex-container { display: flex; flex-direction: column; gap: 20px; background: #FFFFFF; border: 1px solid #E5E1DA; border-radius: 8px; padding: 20px; }
             .detail-image-box { flex: 1 1 100%; text-align: center; }
             .detail-info-box { flex: 1 1 100%; display: flex; flex-direction: column; }
-            
             @media (min-width: 768px) {
                 .detail-nav { padding: 15px 40px; }
                 .detail-flex-container { flex-direction: row; gap: 40px; padding: 30px; }
@@ -199,7 +215,7 @@ export function renderProductDetail(container, productId) {
             </nav>
 
             <main style="max-width: 1100px; margin: 20px auto; padding: 0 15px;">
-                <div style="font-size: 11px; color: #777; margin-bottom: 15px; text-transform: uppercase; word-break: break-all;">
+                <div style="font-size: 11px; color: #777; margin-bottom: 15px; text-transform: uppercase;">
                     Tienda / Catálogo / ${product.category} / <span style="color: var(--color-texto); font-weight: 600;">${product.name}</span>
                 </div>
 
@@ -211,12 +227,12 @@ export function renderProductDetail(container, productId) {
                     </div>
 
                     <div class="detail-info-box">
+                        <span style="font-size: 11px; color:#888;">CÓDIGO: ${product.code || 'S/C'}</span>
                         <span style="font-size: 12px; color: var(--color-acento); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">${product.category}</span>
                         <h2 style="font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 400; color: var(--color-texto); margin: 0 0 15px 0;">${product.name}</h2>
                         <hr style="border: 0; border-top: 1px solid #E5E1DA; margin: 10px 0 20px 0;">
 
                         <div style="margin-bottom: 20px;">
-                            <span style="font-size: 14px; color: #555;">MXN</span>
                             <span style="font-size: 32px; font-weight: 300; color: var(--color-texto);">$${parseFloat(product.price).toFixed(2)}</span>
                         </div>
 
@@ -248,8 +264,8 @@ export function renderProductDetail(container, productId) {
     const btnAddCart = document.getElementById('btn-detail-add-cart');
     if (btnAddCart && isAvailable) {
         btnAddCart.addEventListener('click', () => {
-            const result = addToCart(product.id);
-            alert(result.message);
+            addToCart(product.id);
+            alert("¡Producto añadido con éxito a tu carrito!");
             renderProductDetail(container, productId);
         });
     }
@@ -266,22 +282,8 @@ export function renderCartPage(container) {
             .cart-main-box { flex: 1 1 100%; }
             .cart-side-box { flex: 1 1 100%; }
             .cart-item-row { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0EDE6; padding: 15px 0; gap: 15px; flex-wrap: wrap; }
-            
-            /* Formulario de envío premium */
-            .checkout-form-container {
-                background: #FAF9F6;
-                border: 1px dashed var(--color-acento);
-                border-radius: 8px;
-                padding: 20px;
-                margin-top: 20px;
-                display: none; /* Se activa dinámicamente */
-                animation: fadeIn 0.4s ease;
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            
+            .checkout-form-container { background: #FAF9F6; border: 1px dashed var(--color-acento); border-radius: 8px; padding: 20px; margin-top: 20px; display: none; animation: fadeIn 0.4s ease; }
+            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
             @media (min-width: 768px) {
                 .cart-nav { padding: 15px 40px; }
                 .cart-flex-wrapper { flex-direction: row; align-items: flex-start; }
@@ -305,7 +307,7 @@ export function renderCartPage(container) {
                 
                 <div class="cart-flex-wrapper">
                     <div class="cart-main-box">
-                        <div style="background: #FFFFFF; border: 1px solid #E5E1DA; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.01);">
+                        <div style="background: #FFFFFF; border: 1px solid #E5E1DA; border-radius: 8px; padding: 20px;">
                             <div id="cart-items-list"></div>
                         </div>
                         
@@ -315,58 +317,66 @@ export function renderCartPage(container) {
                                 <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:12px;">
                                     <div style="flex: 1 1 200px;">
                                         <label style="font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:4px;">Nombre Completo *</label>
-                                        <input type="text" id="chk-fullname" required class="form-input" placeholder="Ej: Juan Pérez" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                                        <input type="text" id="chk-fullname" required placeholder="Ej: Juan Pérez" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
                                     </div>
                                     <div style="flex: 1 1 200px;">
+                                        <label style="font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:4px;">Nº de Identificación (DNI/Cédula) *</label>
+                                        <input type="text" id="chk-doc-id" required placeholder="Ej: ID-9823423" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:12px;">
+                                    <div style="flex: 1 1 200px;">
                                         <label style="font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:4px;">Teléfono de Contacto *</label>
-                                        <input type="tel" id="chk-phone" required class="form-input" placeholder="Ej: +52 55 1234 5678" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                                        <input type="tel" id="chk-phone" required placeholder="Ej: +52 55 1234 5678" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+                                    </div>
+                                    <div style="flex: 1 1 200px;">
+                                        <label style="font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:4px;">Correo Electrónico *</label>
+                                        <input type="email" id="chk-email" required placeholder="juan@mail.com" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
                                     </div>
                                 </div>
                                 <div style="margin-bottom:12px;">
                                     <label style="font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:4px;">Dirección de Entrega Completa *</label>
-                                    <input type="text" id="chk-address" required class="form-input" placeholder="Calle, Número, Colonia, Municipio / Ciudad" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                                    <input type="text" id="chk-address" required placeholder="Calle, Número, Colonia, Ciudad" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
                                 </div>
-                                <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px;">
+                                
+                                <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:12px;">
                                     <div style="flex: 1 1 200px;">
-                                        <label style="font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:4px;">Método de Pago Seleccionado *</label>
-                                        <select id="chk-payment" required class="form-input" style="width:100%; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:4px; font-family:inherit;">
-                                            <option value="Tarjeta de Crédito / Débito">💳 Tarjeta de Crédito / Débito (Premium)</option>
-                                            <option value="Transferencia Bancaria Directa">🏦 Transferencia Bancaria Directa</option>
-                                            <option value="PayPal Express">🌐 PayPal Express Check</option>
+                                        <label style="font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:4px;">Método de Pago Preferido *</label>
+                                        <select id="chk-payment" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; font-family:inherit;">
+                                            <option value="Tarjeta de Crédito / Débito">Tarjeta de Crédito / Débito Premium</option>
+                                            <option value="Transferencia Bancaria (SPEI/PSE)">Transferencia Bancaria Directa</option>
+                                            <option value="PayPal">PayPal Check</option>
                                         </select>
                                     </div>
-                                    <div style="flex: 1 1 200px;">
-                                        <label style="font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:4px;">Notas Especiales (Opcional)</label>
-                                        <input type="text" id="chk-notes" class="form-input" placeholder="Ej: Dejar en recepción, color específico..." style="width:100%; box-sizing:border-box; padding:10px; border:1px solid #ccc; border-radius:4px;">
-                                    </div>
                                 </div>
-                                <button type="submit" class="btn-premium" style="width:100%; padding:14px; font-weight:bold; text-transform:uppercase; font-size:13px;">
+                                <div style="margin-bottom:12px;">
+                                    <label style="font-size:11px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:4px;">Notas Especiales para el Repartidor</label>
+                                    <textarea id="chk-notes" placeholder="Ej: Portería, dejar con el vecino, llamar al llegar..." style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; font-family:inherit; resize:none;" rows="2"></textarea>
+                                </div>
+
+                                <button type="submit" class="btn-premium" style="width:100%; padding:14px; font-weight:bold; text-transform:uppercase; font-size:13px; margin-top:10px;">
                                     Confirmar Orden de Compra ($${totalOrder.toFixed(2)})
                                 </button>
                             </form>
                         </div>
                     </div>
 
-                    <div class="cart-side-box" style="background: #FFFFFF; border: 1px solid #E5E1DA; border-radius: 8px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.01);">
-                        <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 15px 0; color: var(--color-texto);">Resumen del Pedido</h3>
-                        
+                    <div class="cart-side-box" style="background: #FFFFFF; border: 1px solid #E5E1DA; border-radius: 8px; padding: 20px;">
+                        <h3 style="font-size: 14px; text-transform: uppercase; margin: 0 0 15px 0;">Resumen</h3>
                         <div style="display: flex; justify-content: space-between; font-size: 14px; color: #666; margin-bottom: 10px;">
-                            <span>Subtotal productos:</span>
+                            <span>Subtotal:</span>
                             <span>$${totalOrder.toFixed(2)}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; font-size: 14px; color: #666; margin-bottom: 15px;">
-                            <span>Envío Asegurado:</span>
+                            <span>Envío:</span>
                             <span style="color: #388E3C; font-weight: bold;">Gratis</span>
                         </div>
-                        
                         <hr style="border: 0; border-top: 1px solid #E5E1DA; margin: 15px 0;">
-
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                            <span style="font-size: 15px; font-weight: bold; color: var(--color-texto);">Total Estimado:</span>
-                            <span style="font-size: 22px; font-weight: bold; color: var(--color-texto); font-family: 'Segoe UI', sans-serif;">$${totalOrder.toFixed(2)}</span>
+                            <span style="font-size: 15px; font-weight: bold;">Total:</span>
+                            <span style="font-size: 22px; font-weight: bold;">$${totalOrder.toFixed(2)}</span>
                         </div>
-
-                        <button id="btn-cart-page-checkout" class="btn-premium" style="width: 100%; padding: 14px; font-size: 13px; border-radius: 4px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">
+                        <button id="btn-cart-page-checkout" class="btn-premium" style="width: 100%; padding: 14px; font-size: 13px; font-weight: bold; text-transform: uppercase;">
                             Proceder al Pago
                         </button>
                     </div>
@@ -381,44 +391,28 @@ export function renderCartPage(container) {
     const itemsContainer = document.getElementById('cart-items-list');
 
     if (cart.length === 0) {
-        itemsContainer.innerHTML = `
-            <div style="text-align: center; padding: 40px 15px; color: #888; font-style: italic;">
-                <p style="font-size: 15px; margin-bottom: 20px;">Tu bolsa de compras está vacía.</p>
-                <button id="btn-empty-back" class="btn-premium" style="padding: 10px 20px; font-size: 12px;">Explorar Catálogo</button>
-            </div>
-        `;
-        document.getElementById('btn-empty-back').addEventListener('click', () => renderStore(container));
-        
+        itemsContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: #888; font-style: italic;">Tu bolsa de compras está vacía.</div>`;
         const btnPay = document.getElementById('btn-cart-page-checkout');
-        if(btnPay) {
-            btnPay.disabled = true;
-            btnPay.style.background = '#ccc';
-            btnPay.style.cursor = 'not-allowed';
-        }
+        if(btnPay) { btnPay.disabled = true; btnPay.style.background = '#ccc'; }
         return;
     }
 
     itemsContainer.innerHTML = cart.map(item => `
         <div class="cart-item-row">
-            <img src="${item.image}" alt="${item.name}" style="width: 60px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #E5E1DA;">
-            
-            <div style="flex: 2 1 150px; min-width: 120px;">
-                <h4 style="font-size: 14px; margin: 0 0 4px 0; color: var(--color-texto); font-weight: 600;">${item.name}</h4>
-                <span style="font-size: 10px; background: #E5E1DA; padding: 3px 8px; border-radius: 10px; color: #555; text-transform: uppercase;">${item.category}</span>
+            <img src="${item.image}" alt="${item.name}" style="width: 60px; height: 80px; object-fit: cover; border-radius: 4px;">
+            <div style="flex: 2 1 150px;">
+                <h4 style="font-size: 14px; margin: 0 0 4px 0;">${item.name}</h4>
+                <span style="font-size: 10px; background: #E5E1DA; padding: 3px 8px; border-radius: 10px;">${item.category}</span>
             </div>
-
             <div style="display: flex; align-items: center; gap: 8px;">
-                <button class="btn-page-minus" data-id="${item.id}" data-qty="${item.quantity}" style="background: #E5E1DA; border: none; width: 28px; height: 28px; cursor: pointer; border-radius: 4px; font-weight: bold;">-</button>
-                <span style="font-size: 14px; font-weight: bold; width: 20px; text-align: center;">${item.quantity}</span>
-                <button class="btn-page-plus" data-id="${item.id}" data-qty="${item.quantity}" style="background: #E5E1DA; border: none; width: 28px; height: 28px; cursor: pointer; border-radius: 4px; font-weight: bold;">+</button>
+                <button class="btn-page-minus" data-id="${item.id}" data-qty="${item.quantity}" style="background:#E5E1DA; border:none; width:28px; height:28px; cursor:pointer;">-</button>
+                <span style="font-weight: bold;">${item.quantity}</span>
+                <button class="btn-page-plus" data-id="${item.id}" data-qty="${item.quantity}" style="background:#E5E1DA; border:none; width:28px; height:28px; cursor:pointer;">+</button>
             </div>
-
             <div style="text-align: right; min-width: 90px;">
-                <div style="font-size: 15px; font-weight: bold; color: var(--color-texto);">$${(parseFloat(item.price) * item.quantity).toFixed(2)}</div>
-                <div style="font-size: 11px; color: #888;">$${parseFloat(item.price).toFixed(2)} c/u</div>
+                <div style="font-size: 15px; font-weight: bold;">$${(parseFloat(item.price) * item.quantity).toFixed(2)}</div>
             </div>
-
-            <button class="btn-page-remove" data-id="${item.id}" style="background: none; border: none; color: var(--color-error); cursor: pointer; font-size: 20px; padding: 5px;">&times;</button>
+            <button class="btn-page-remove" data-id="${item.id}" style="background: none; border: none; color: var(--color-error); cursor: pointer; font-size: 20px;">&times;</button>
         </div>
     `).join('');
 
@@ -435,50 +429,45 @@ export function renderCartPage(container) {
         btn.addEventListener('click', () => {
             const id = btn.getAttribute('data-id');
             const qty = parseInt(btn.getAttribute('data-qty'));
-            const res = updateCartQuantity(id, qty + 1);
-            if (!res.success) alert(res.message);
+            updateCartQuantity(id, qty + 1);
             renderCartPage(container);
         });
     });
 
     itemsContainer.querySelectorAll('.btn-page-remove').forEach(btn => {
         btn.addEventListener('click', () => {
-            const id = btn.getAttribute('data-id');
-            removeFromCart(id);
+            removeFromCart(btn.getAttribute('data-id'));
             renderCartPage(container);
         });
     });
 
-    // Evento de Proceder al Pago -> Despliega el formulario adicional de forma fluida
     const btnCheckout = document.getElementById('btn-cart-page-checkout');
     const checkoutFormSection = document.getElementById('checkout-form-section');
 
     btnCheckout.addEventListener('click', () => {
         checkoutFormSection.style.display = 'block';
         checkoutFormSection.scrollIntoView({ behavior: 'smooth' });
-        btnCheckout.disabled = true; // Deshabilita para guiar al usuario al formulario
+        btnCheckout.disabled = true;
         btnCheckout.style.opacity = '0.5';
     });
 
-    // Envío definitivo recopilando la información del formulario premium
     document.getElementById('form-complete-order-details').addEventListener('submit', (e) => {
         e.preventDefault();
-        
         const fullName = document.getElementById('chk-fullname').value.trim();
+        const docId = document.getElementById('chk-doc-id').value.trim();
         const phone = document.getElementById('chk-phone').value.trim();
+        const email = document.getElementById('chk-email').value.trim();
         const address = document.getElementById('chk-address').value.trim();
-        const paymentMethod = document.getElementById('chk-payment').value;
-        const notes = document.getElementById('chk-notes').value.trim();
+        const payment = document.getElementById('chk-payment').value;
+        const notes = document.getElementById('chk-notes').value.trim() || 'Ninguna';
 
-        // Creamos un formato estructurado completo para guardar la auditoría del pedido en el Admin
-        const formattedCustomerName = `${fullName} (Tel: ${phone} | Dir: ${address} | Pago: ${paymentMethod}${notes ? ` | Notas: ${notes}` : ''})`;
+        // Estructura completa de auditoría para guardar en localStorage y verse en el Dashboard
+        const auditInfo = `Nombre: ${fullName} | ID: ${docId} | Tel: ${phone} | Email: ${email} | Dir: ${address} | Pago: ${payment} | Notas: ${notes}`;
 
-        const response = checkoutCart(formattedCustomerName);
+        const response = checkoutCart(auditInfo);
         if (response.success) {
-            alert(`¡Compra Exitosa!\n\nGracias por tu confianza, ${fullName}. Tu pedido será procesado bajo la modalidad: ${paymentMethod}.\n\n${response.message}`);
-            renderStore(container); // Volvemos limpios al catálogo
-        } else {
-            alert(response.message);
+            alert(`¡Compra Exitosa!\n\nGracias ${fullName}. Su pedido ha sido registrado con éxito.`);
+            renderStore(container);
         }
     });
-}   
+}
